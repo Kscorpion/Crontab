@@ -24,7 +24,7 @@ func BuildResponse(errno int, msg string, data interface{}) (resp []byte, err er
 	)
 	response.Errno = errno
 	response.Msg = msg
-	response.data = data
+	response.Data = data
 	//2.序列化json
 	resp, err = json.Marshal(response)
 	return
