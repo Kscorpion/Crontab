@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/Kscorpion/Crontab/master"
 	"runtime"
+	"time"
 )
 
 func initEnv() {
@@ -35,9 +36,17 @@ func main() {
 	if err = master.InitConfig(confFile); err != nil {
 		goto ERR
 	}
+	//任务管理器
+	if err = master.InitJobMgr(); err != nil {
+		goto ERR
+	}
+
 	//启动API HTTP服务
 	if err = master.InitApiServer(); err != nil {
 		goto ERR
+	}
+	for {
+		time.Sleep(1 * time.Second)
 	}
 	//正常退出
 	return

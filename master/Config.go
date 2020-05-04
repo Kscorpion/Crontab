@@ -2,15 +2,16 @@ package master
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 )
 
 //程序配置
 type Config struct {
-	ApiPort         int `json:"apiPort"`
-	ApiReadTimeOut  int `json:"apiReadTimeOut"`
-	ApiWriteTimeOut int `json:"apiWriteTimeOut"`
+	ApiPort         int      `json:"apiPort"`
+	ApiReadTimeOut  int      `json:"apiReadTimeOut"`
+	ApiWriteTimeOut int      `json:"apiWriteTimeOut"`
+	EtcdEndPoints   []string `json:"etcdEndPoints"`
+	etcdDialTimeOut int      `json:"etcdDialTimeOut"`
 }
 
 var (
@@ -32,6 +33,5 @@ func InitConfig(filename string) (err error) {
 		return
 	}
 	G_config = &conf
-	fmt.Println(G_config)
 	return
 }
