@@ -69,7 +69,6 @@ func InitApiServer() (err error) {
 	if listener, err = net.Listen("tcp", ":"+strconv.Itoa(G_config.ApiPort)); err != nil {
 		return
 	}
-	defer listener.Close()
 	//创建一个HTTP服务
 	httpServer = &http.Server{
 		ReadTimeout:  time.Duration(G_config.ApiReadTimeOut) * time.Millisecond,

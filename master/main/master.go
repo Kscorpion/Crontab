@@ -33,6 +33,7 @@ func main() {
 	//初始化线程
 	initEnv()
 	//加载配置
+	fmt.Println(confFile)
 	if err = master.InitConfig(confFile); err != nil {
 		goto ERR
 	}
@@ -45,6 +46,7 @@ func main() {
 	if err = master.InitApiServer(); err != nil {
 		goto ERR
 	}
+
 	for {
 		time.Sleep(1 * time.Second)
 	}
