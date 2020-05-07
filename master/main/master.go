@@ -33,7 +33,6 @@ func main() {
 	//初始化线程
 	initEnv()
 	//加载配置
-	fmt.Println(confFile)
 	if err = master.InitConfig(confFile); err != nil {
 		goto ERR
 	}
