@@ -19,7 +19,7 @@
     <!--功能按钮-->
     <div class="row">
     <div class="col-md-12">
-        <button type="button" class="btn btn-primary">新建任务</button>
+        <button type="button" class="btn btn-primary" id="new-job">新建任务</button>
     </div>
     </div>
     <!--任务列表-->
@@ -46,19 +46,96 @@
         </div>
     </div>
 </div>
+<div id="edit-modal" class="modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">编辑任务</h4>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="from-group">
+                        <label for="edit-name">任务名称</label>
+                        <input type="text" class="form-control" id="edit-name" placeholder="任务名称">
+                    </div>
+                    <div class="from-group">
+                        <label for="edit-command">shell命令</label>
+                        <input type="text" class="form-control" id="edit-command" placeholder="命令">
+                    </div>
+                    <div class="from-group">
+                        <label for="edit-cronExpr">cron表达式</label>
+                        <input type="text" class="form-control" id="edit-cronExpr" placeholder="cron表达式">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                <button type="button" class="btn btn-primary" id="save-job">保存</button>
+            </div>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
 <script>
     //页面加载完成后，回调函数
     $(document).ready(function () {
         //1.绑定按钮的事件处理函数
         //用js的委托机制 浏览器DOM事件冒泡关键原理
+        //编辑任务
         $("#job-list").on("click",".edit-job",function (event) {
-            console.log("编辑按钮")
+            //去除当前job信息复制给模态框
+            $("#edit-name").val($(this).parents("tr").children('job-name').text())
+            $("#edit-command").val($(this).parents("tr").children('job-command').text())
+            $("#edit-cronExpr").val($(this).parents("tr").children('job-cronExpr').text())
+            //弹出模态框
+            $("#edit-modal").modal('show')
+
         })
+        //删除任务
         $("#job-list").on("click",".delete-job",function (event) {
-            console.log("删除按钮")
+            var jobName = $this.parents("tr").children("job-name").text()
+            $.ajax({
+                url: '/job/delete',
+                type:'post',
+                dataType: 'json',
+                data:{name:jobName},
+                complete:function () {
+                    window.location.reload()
+                }
+            })
         })
+        //杀死任务
         $("#job-list").on("click",".kill-job",function (event) {
-            console.log("强杀按钮")
+            var jobName = $this.parents("tr").children("job-name").text()
+            $.ajax({
+                url: '/job/kill',
+                type:'post',
+                dataType: 'json',
+                data:{name:jobName},
+                complete:function () {
+                    window.location.reload()
+                }
+            })
+        })
+        //保存任务
+        $('#save-job').on('click',function () {
+            var jobinfo = {name:$('#edit-name').val(),command:$('#edit-command').val(),cronExpr:$('#edit-cronExpr').val()}
+            $.ajax({
+                url:'/job/save',
+                type:'post',
+                dataType:'json',
+                data:{job:JSON.stringify(jobinfo)},
+                complete:function () {
+                    window.location.reload()
+                }
+            })
+        })
+        //新建任务
+        $('#new-job').on('click',function () {
+            $('#edit-name').val("")
+            $('#edit-command').val("")
+            $('#edit-cronExpr').val("")
+            $('#edit-modal').modal('show')
         })
         //2、定义一个函数刷新列表
         function rebuidJobList() {
