@@ -3,6 +3,7 @@ package master
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/Kscorpion/common"
 	"go.etcd.io/etcd/clientv3"
 	"go.etcd.io/etcd/mvcc/mvccpb"
@@ -59,6 +60,7 @@ func (JobMgr *JobMgr) SaveJob(job *common.Job) (oldJob *common.Job, err error) {
 		putResponse *clientv3.PutResponse
 		oldJobObj   common.Job
 	)
+
 	//etcd的保存key
 	jobKey = common.JOB_SAVE_DIR + job.Name
 	//任务信息json
@@ -67,6 +69,7 @@ func (JobMgr *JobMgr) SaveJob(job *common.Job) (oldJob *common.Job, err error) {
 	}
 	//保存到etcd
 	if putResponse, err = JobMgr.kv.Put(context.TODO(), jobKey, string(jobValue), clientv3.WithPrevKV()); err != nil {
+		fmt.Println(000000)
 		return
 	}
 	//如果是更新,返回旧值
@@ -90,6 +93,7 @@ func (jobMgr *JobMgr) DeleteJob(name string) (oldJob *common.Job, err error) {
 	)
 	//etcd保存任务的key
 	jobKey = common.JOB_SAVE_DIR + name
+	//fmt.Println(jobKey)
 	//从etcd中删除它
 	if delResp, err = jobMgr.kv.Delete(context.TODO(), jobKey, clientv3.WithPrevKV()); err != nil {
 		return
@@ -119,6 +123,7 @@ func (jobMgr *JobMgr) ListJobs() (jobList []*common.Job, err error) {
 		return
 	}
 	//初始化数组空间
+	//fmt.Println(getResp.Kvs)
 	jobList = make([]*common.Job, 0)
 	for _, kvPair = range getResp.Kvs {
 		job = &common.Job{}

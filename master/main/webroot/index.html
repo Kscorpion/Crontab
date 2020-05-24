@@ -93,7 +93,8 @@
         })
         //删除任务
         $("#job-list").on("click",".delete-job",function (event) {
-            var jobName = $this.parents("tr").children("job-name").text()
+            var jobName = $(this).parents("tr").children(".job-name").text()
+            console.log(jobName);
             $.ajax({
                 url: '/job/delete',
                 type:'post',
@@ -106,7 +107,7 @@
         })
         //杀死任务
         $("#job-list").on("click",".kill-job",function (event) {
-            var jobName = $this.parents("tr").children("job-name").text()
+            var jobName = $(this).parents("tr").children(".job-name").text()
             $.ajax({
                 url: '/job/kill',
                 type:'post',
