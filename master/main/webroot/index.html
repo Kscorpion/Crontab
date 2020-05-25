@@ -84,9 +84,9 @@
         //编辑任务
         $("#job-list").on("click",".edit-job",function (event) {
             //去除当前job信息复制给模态框
-            $("#edit-name").val($(this).parents("tr").children('job-name').text())
-            $("#edit-command").val($(this).parents("tr").children('job-command').text())
-            $("#edit-cronExpr").val($(this).parents("tr").children('job-cronExpr').text())
+            $("#edit-name").val($(this).parents("tr").children('.job-name').text())
+            $("#edit-command").val($(this).parents("tr").children('.job-command').text())
+            $("#edit-cronExpr").val($(this).parents("tr").children('.job-cronExpr').text())
             //弹出模态框
             $("#edit-modal").modal('show')
 
