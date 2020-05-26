@@ -98,7 +98,7 @@ func (scheduler *Scheduler) TrySchedule() (scheduleAfter time.Duration) {
 func (scheduler *Scheduler) handleJobResult(result *common.JobExecuteResult) {
 	//删除执行状态
 	delete(scheduler.jobExecutingTable, result.ExecuteInfo.Job.Name)
-	fmt.Println("任务执行完成，", result.ExecuteInfo.Job.Name, result.OutPut, result.Err)
+	fmt.Println("任务执行完成，", result.ExecuteInfo.Job.Name, string(result.OutPut), result.Err)
 }
 
 //调度携程
