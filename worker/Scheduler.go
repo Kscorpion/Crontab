@@ -10,6 +10,7 @@ type Scheduler struct {
 	jobEventChan      chan *common.JobEvent              //  etcd任务事件队列
 	jobPlanTable      map[string]*common.JobSchedulePlan // 任务调度计划表
 	jobExecutingTable map[string]*common.JobExcuteInfo   //任务执行表
+	jobResultChan     chan *common.JobExecuteResult      //任务结果队列
 }
 
 var (
@@ -59,8 +60,8 @@ func (scheduler *Scheduler) TryStartJob(jobPlan *common.JobSchedulePlan) {
 	scheduler.jobExecutingTable[jobPlan.Job.Name] = jobExecuteInfo
 
 	//执行任务
-	//TODO:
-	fmt.Println("执行任务", jobExecuteInfo.Job.Name, jobExecuteInfo.PlanTime, jobExecuteInfo.RealTime)
+	G_executor.ExecuteJob(jobExecuteInfo)
+	fmt.Println("执行任务", jobExecuteInfo.Job.Name, jobExecuteInfo.RealTime, jobExecuteInfo.PlanTime)
 }
 
 //重新计算任务调度状态
@@ -93,12 +94,20 @@ func (scheduler *Scheduler) TrySchedule() (scheduleAfter time.Duration) {
 	return
 }
 
+//
+func (scheduler *Scheduler) handleJobResult(result *common.JobExecuteResult) {
+	//删除执行状态
+	delete(scheduler.jobExecutingTable, result.ExecuteInfo.Job.Name)
+	fmt.Println("任务执行完成，", result.ExecuteInfo.Job.Name, result.OutPut, result.Err)
+}
+
 //调度携程
 func (scheduler *Scheduler) scheduleLoop() {
 	var (
 		jobEvent      *common.JobEvent
 		scheduleAfter time.Duration
 		scheduleTimer *time.Timer
+		jobResult     *common.JobExecuteResult
 	)
 
 	//初始化一次(1秒)
@@ -114,6 +123,8 @@ func (scheduler *Scheduler) scheduleLoop() {
 			//对我们内存中维护的任务列表进行curd
 			scheduler.handleJobEvent(jobEvent)
 		case <-scheduleTimer.C: //最近的任务到期了
+		case jobResult = <-scheduler.jobResultChan: //监听任务执行结果
+			scheduler.handleJobResult(jobResult)
 		}
 		//调度一次任务
 		scheduleAfter = scheduler.TrySchedule()
@@ -128,24 +139,19 @@ func (scheduler *Scheduler) PushJobEvent(jobEvent *common.JobEvent) {
 }
 
 //初始化调度器
-func aa() (err error) {
+func InitScheduler() (err error) {
 	G_scheduler = &Scheduler{
-		jobEventChan: make(chan *common.JobEvent, 1000),
-		jobPlanTable: make(map[string]*common.JobSchedulePlan),
+		jobEventChan:      make(chan *common.JobEvent, 1000),
+		jobPlanTable:      make(map[string]*common.JobSchedulePlan),
+		jobExecutingTable: make(map[string]*common.JobExcuteInfo),
+		jobResultChan:     make(chan *common.JobExecuteResult, 1000),
 	}
 	//启动调度携程
 	go G_scheduler.scheduleLoop()
 	return
 }
 
-//初始化调度器
-func InitScheduler() (err error) {
-	G_scheduler = &Scheduler{
-		jobEventChan:      make(chan *common.JobEvent, 1000),
-		jobPlanTable:      make(map[string]*common.JobSchedulePlan),
-		jobExecutingTable: make(map[string]*common.JobExcuteInfo),
-	}
-	//启动调度携程
-	go G_scheduler.scheduleLoop()
-	return
+//回传任务执行结果
+func (scheduler *Scheduler) PushJobResult(jobResult *common.JobExecuteResult) {
+	scheduler.jobResultChan <- jobResult
 }
