@@ -9,7 +9,7 @@ import (
 type Scheduler struct {
 	jobEventChan      chan *common.JobEvent              //  etcd任务事件队列
 	jobPlanTable      map[string]*common.JobSchedulePlan // 任务调度计划表
-	jobExecutingTable map[string]*common.JobExcuteInfo   //任务执行表
+	jobExecutingTable map[string]*common.JobExecuteInfo  //任务执行表
 	jobResultChan     chan *common.JobExecuteResult      //任务结果队列
 }
 
@@ -17,51 +17,59 @@ var (
 	G_scheduler *Scheduler
 )
 
-//处理任务事件
+// 处理任务事件
 func (scheduler *Scheduler) handleJobEvent(jobEvent *common.JobEvent) {
 	var (
 		jobSchedulePlan *common.JobSchedulePlan
+		jobExecuteInfo  *common.JobExecuteInfo
+		jobExecuting    bool
 		jobExisted      bool
 		err             error
 	)
-
 	switch jobEvent.EventType {
-	case common.JOB_EVENT_SAVE: //保存任务事件
+	case common.JOB_EVENT_SAVE: // 保存任务事件
 		if jobSchedulePlan, err = common.BuildJobSchedulePlan(jobEvent.Job); err != nil {
 			return
 		}
 		scheduler.jobPlanTable[jobEvent.Job.Name] = jobSchedulePlan
-	case common.JOB_EVENT_DELETE: //删除任务事件
+	case common.JOB_EVENT_DELETE: // 删除任务事件
 		if jobSchedulePlan, jobExisted = scheduler.jobPlanTable[jobEvent.Job.Name]; jobExisted {
 			delete(scheduler.jobPlanTable, jobEvent.Job.Name)
+		}
+	case common.JOB_EVENT_KILL: // 强杀任务事件
+		// 取消掉Command执行, 判断任务是否在执行中
+		if jobExecuteInfo, jobExecuting = scheduler.jobExecutingTable[jobEvent.Job.Name]; jobExecuting {
+			fmt.Println("杀死子进程：", jobEvent.Job.Name)
+			jobExecuteInfo.CancelFunc() // 触发command杀死shell子进程, 任务得到退出
 		}
 	}
 }
 
-//尝试执行任务
+// 尝试执行任务
 func (scheduler *Scheduler) TryStartJob(jobPlan *common.JobSchedulePlan) {
-	//调度和执行是两件事情
+	// 调度 和 执行 是2件事情
 	var (
-		jobExecuteInfo *common.JobExcuteInfo
+		jobExecuteInfo *common.JobExecuteInfo
 		jobExecuting   bool
 	)
-	//执行可能很久,每个间隔调度多次但是只能执行一次，防止并发
 
-	//如果任务正在执行跳过本次任务
+	// 执行的任务可能运行很久, 1分钟会调度60次，但是只能执行1次, 防止并发！
+
+	// 如果任务正在执行，跳过本次调度
 	if jobExecuteInfo, jobExecuting = scheduler.jobExecutingTable[jobPlan.Job.Name]; jobExecuting {
-		fmt.Println("尚未执行，跳过:", jobExecuteInfo.Job.Name)
+		// fmt.Println("尚未退出,跳过执行:", jobPlan.Job.Name)
 		return
 	}
 
-	//构建执行状态
+	// 构建执行状态信息
 	jobExecuteInfo = common.BuildJobExecuteInfo(jobPlan)
 
-	//保存执行状态
+	// 保存执行状态
 	scheduler.jobExecutingTable[jobPlan.Job.Name] = jobExecuteInfo
 
-	//执行任务
+	// 执行任务
+	fmt.Println("执行任务:", jobExecuteInfo.Job.Name, jobExecuteInfo.PlanTime, jobExecuteInfo.RealTime)
 	G_executor.ExecuteJob(jobExecuteInfo)
-	fmt.Println("执行任务", jobExecuteInfo.Job.Name, jobExecuteInfo.RealTime, jobExecuteInfo.PlanTime)
 }
 
 //重新计算任务调度状态
@@ -97,8 +105,29 @@ func (scheduler *Scheduler) TrySchedule() (scheduleAfter time.Duration) {
 //
 func (scheduler *Scheduler) handleJobResult(result *common.JobExecuteResult) {
 	//删除执行状态
+	var (
+		jobLog *common.JobLog
+	)
 	delete(scheduler.jobExecutingTable, result.ExecuteInfo.Job.Name)
-	fmt.Println("任务执行完成，", result.ExecuteInfo.Job.Name, string(result.OutPut), result.Err)
+	//生成执行日志(跳过锁被占用的情况)
+	if result.Err != common.ERR_LOCK_ALREADY_REQUIRED {
+		jobLog = &common.JobLog{
+			JobName:      result.ExecuteInfo.Job.Name,
+			Command:      result.ExecuteInfo.Job.Command,
+			Output:       string(result.OutPut),
+			PlanTime:     result.ExecuteInfo.PlanTime.UnixNano() / 1000 / 1000,
+			ScheduleTime: result.ExecuteInfo.RealTime.UnixNano() / 1000 / 1000,
+			StartTime:    result.StartTime.UnixNano() / 1000 / 1000,
+			EndTime:      result.EndTime.UnixNano() / 1000 / 1000,
+		}
+		if result.Err != nil {
+			jobLog.Err = result.Err.Error()
+		} else {
+			jobLog.Err = ""
+		}
+		//将日志存储到MongoDB
+	}
+
 }
 
 //调度携程
@@ -143,7 +172,7 @@ func InitScheduler() (err error) {
 	G_scheduler = &Scheduler{
 		jobEventChan:      make(chan *common.JobEvent, 1000),
 		jobPlanTable:      make(map[string]*common.JobSchedulePlan),
-		jobExecutingTable: make(map[string]*common.JobExcuteInfo),
+		jobExecutingTable: make(map[string]*common.JobExecuteInfo),
 		jobResultChan:     make(chan *common.JobExecuteResult, 1000),
 	}
 	//启动调度携程

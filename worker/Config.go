@@ -7,8 +7,10 @@ import (
 
 //程序配置
 type Config struct {
-	EtcdEndPoints   []string `json:"etcdEndPoints"`
-	etcdDialTimeOut int      `json:"etcdDialTimeOut"`
+	EtcdEndPoints         []string `json:"etcdEndPoints"`
+	EtcdDialTimeOut       int      `json:"etcdDialTimeOut"`
+	MongodbUri            string   `json:"mongodbUri"`
+	MongodbConnectTimeOut int      `json:"mongodbConnectTimeOut"`
 }
 
 var (
