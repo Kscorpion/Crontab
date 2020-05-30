@@ -125,7 +125,7 @@ func (scheduler *Scheduler) handleJobResult(result *common.JobExecuteResult) {
 		} else {
 			jobLog.Err = ""
 		}
-		//将日志存储到MongoDB
+		G_logSink.Append(jobLog)
 	}
 
 }

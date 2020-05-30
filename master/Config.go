@@ -11,7 +11,7 @@ type Config struct {
 	ApiReadTimeOut  int      `json:"apiReadTimeOut"`
 	ApiWriteTimeOut int      `json:"apiWriteTimeOut"`
 	EtcdEndPoints   []string `json:"etcdEndPoints"`
-	etcdDialTimeOut int      `json:"etcdDialTimeOut"`
+	EtcdDialTimeOut int      `json:"etcdDialTimeOut"`
 	Webroot         string   `json:"webroot"`
 }
 
