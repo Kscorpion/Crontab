@@ -28,7 +28,7 @@ func (executor *Executor) ExecuteJob(info *common.JobExecuteInfo) {
 		//任务结果
 		result = &common.JobExecuteResult{
 			ExecuteInfo: info,
-			OutPut:      make([]byte, 0),
+			Output:      make([]byte, 0),
 		}
 
 		//初始化分布式锁
@@ -58,7 +58,7 @@ func (executor *Executor) ExecuteJob(info *common.JobExecuteInfo) {
 
 			//记录任务结束时间
 			result.EndTime = time.Now()
-			result.OutPut = output
+			result.Output = output
 			result.Err = err
 		}
 		//任务执行完成，把结果返回给scheduler,scheduler从excutingTable中删除掉执行的记录
