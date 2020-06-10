@@ -2,7 +2,7 @@ package worker
 
 import (
 	"fmt"
-	"github.com/Kscorpion/common"
+	"github.com/Kscorpion/Crontab/common"
 	"time"
 )
 

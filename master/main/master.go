@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/Kscorpion/master"
+	"github.com/Kscorpion/Crontab/master"
 	"runtime"
 	"time"
 )

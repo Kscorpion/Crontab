@@ -3,7 +3,7 @@ package worker
 import (
 	"context"
 	"fmt"
-	"github.com/Kscorpion/common"
+	"github.com/Kscorpion/Crontab/common"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"time"
@@ -56,7 +56,7 @@ func (logSink *LogSink) writeLoop() {
 			// 把新日志追加到批次中
 			logBatch.Logs = append(logBatch.Logs, log)
 			// 如果批次满了, 就立即发送
-			fmt.Println(len(logBatch.Logs))
+			//fmt.Println(len(logBatch.Logs))
 			if len(logBatch.Logs) >= G_config.JobLogBatchSize {
 				// 发送日志
 				logSink.saveLogs(logBatch)

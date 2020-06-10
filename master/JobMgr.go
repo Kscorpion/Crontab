@@ -3,8 +3,7 @@ package master
 import (
 	"context"
 	"encoding/json"
-	"fmt"
-	"github.com/Kscorpion/common"
+	"github.com/Kscorpion/Crontab/common"
 	"go.etcd.io/etcd/clientv3"
 	"go.etcd.io/etcd/mvcc/mvccpb"
 	"time"
@@ -69,7 +68,6 @@ func (JobMgr *JobMgr) SaveJob(job *common.Job) (oldJob *common.Job, err error) {
 	}
 	//保存到etcd
 	if putResponse, err = JobMgr.kv.Put(context.TODO(), jobKey, string(jobValue), clientv3.WithPrevKV()); err != nil {
-		fmt.Println(000000)
 		return
 	}
 	//如果是更新,返回旧值

@@ -2,7 +2,7 @@ package master
 
 import (
 	"encoding/json"
-	"github.com/Kscorpion/common"
+	"github.com/Kscorpion/Crontab/common"
 	"net"
 	"net/http"
 	"strconv"

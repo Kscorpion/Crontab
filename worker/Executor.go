@@ -1,7 +1,7 @@
 package worker
 
 import (
-	"github.com/Kscorpion/common"
+	"github.com/Kscorpion/Crontab/common"
 	"math/rand"
 	"os/exec"
 	"time"
